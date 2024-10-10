@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    scroll-behavior: smooth;
+  }
+  body {
+    font-family: 'poppins', sans-serif;
+    color: #343434;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+}

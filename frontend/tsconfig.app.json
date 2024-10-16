@@ -23,6 +23,6 @@
   },
   "include": ["frontend/src"],
   "files": [
-    "frontend/src/styles/styled.d.ts"
+    "src/styles/styled.d.ts"
   ],
 }

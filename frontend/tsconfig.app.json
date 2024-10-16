@@ -21,8 +21,8 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"],
+  "include": ["frontend/src"],
   "files": [
-    "src/styles/styled.d.ts"
+    "frontend/src/styles/styled.d.ts"
   ],
 }

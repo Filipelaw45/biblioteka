@@ -1,7 +1,9 @@
 import { Route, Routes } from 'react-router-dom';
 import { Home } from './pages/Home';
 import { Login } from './pages/Login';
+import {Profile} from './pages/Profile'
 import { ProtectedRoute } from './components/ProtectedRoute';
+import React from 'react';
 
 export function Router() {
   return (
@@ -13,6 +15,14 @@ export function Router() {
           element={
             <ProtectedRoute>
               <Home />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
             </ProtectedRoute>
           }
         />

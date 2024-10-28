@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import { AuthContext } from '../../context/AuthContext';
 
 type SearchType = 'title' | 'author' | 'category' | 'isbn';
 
@@ -16,6 +17,9 @@ export function Home() {
   const [books, setBooks] = useState<Book[]>([]);
   const [search, setSearch] = useState<SearchType>('title');
   const [query, setQuery] = useState('');
+  const authContext = useContext(AuthContext);
+
+  const userId = authContext?.userId;
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -40,18 +44,21 @@ export function Home() {
   };
 
   const reserveBook = async (bookId: number) => {
+    if (!userId) {
+      alert('User not logged in');
+      return;
+    }
     try {
       const response = await fetch(`http://localhost:5000/books/reserve/${bookId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ userId: userId }), // Substitua `1` pelo ID real do usuário
       });
 
       if (response.ok) {
-        const updatedBooks = books.map((book) =>
-          book.id === bookId ? { ...book, available: false } : book
-        );
+        const updatedBooks = books.map((book) => (book.id === bookId ? { ...book, available: false } : book));
         setBooks(updatedBooks);
       } else {
         console.error('Failed to reserve book');
@@ -80,15 +87,9 @@ export function Home() {
             <p>{book.title}</p>
             <p>{book.author}</p>
             <p>{book.category}</p>
-            <p>
-              {book.available ? 'Disponível' : 'Já Reservado'}
-            </p>
+            <p>{book.available ? 'Disponível' : 'Já Reservado'}</p>
           </div>
-          {book.available && (
-            <button onClick={() => reserveBook(book.id)}>
-              Reservar
-            </button>
-          )}
+          {book.available && <button onClick={() => reserveBook(book.id)}>Reservar</button>}
         </div>
       ))}
     </section>

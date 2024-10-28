@@ -1,7 +1,8 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import cors from 'cors';
 import * as dotenv from 'dotenv';
 import prisma from './prisma/prismaClient';
+import { sendEmail } from './mailer'
 
 dotenv.config();
 
@@ -16,7 +17,14 @@ app.post('/login', async (req, res) => {
       where: { username, password_hash: password },
     });
     if (user) {
-      res.status(200).json({ token: 'token-ficticio' });
+      res.status(200).json({
+        token: 'token-ficticio',
+        user: {
+          name: user.name,
+          id: user.id,
+        },
+      });
+      console.log(user.id);
     } else {
       res.status(401).json({ message: 'Invalid credentials' });
     }
@@ -25,12 +33,10 @@ app.post('/login', async (req, res) => {
   }
 });
 
-
 app.get('/books', async (req, res) => {
   const { search = '', type } = req.query;
 
-  // Verifica se `type` é uma string e se está entre os tipos válidos
-  const validTypes = ['title', 'author']; // Adicione outras propriedades válidas aqui
+  const validTypes = ['title', 'author', 'isbn', 'category'];
   const searchType = typeof type === 'string' && validTypes.includes(type) ? type : 'title';
 
   try {
@@ -49,21 +55,39 @@ app.get('/books', async (req, res) => {
   }
 });
 
-
-app.post('/books/reserve/:id', async (req, res) => {
+app.post('/books/reserve/:id', async (req: Request, res: Response) => {
   const bookId = parseInt(req.params.id);
+  const { userId } = req.body; // Receber o userId do corpo da requisição
+
   try {
-    const book = await prisma.books.updateMany({
-      where: { id: bookId, available: true },
+    // Verifica se o livro existe e está disponível
+    const book = await prisma.books.findUnique({
+      where: { id: bookId },
+    });
+
+    // Cria a reserva
+    const reservation = await prisma.reservation.create({
+      data: {
+        userId,
+        bookId,
+      },
+    });
+
+    // Atualiza o status do livro
+    await prisma.books.update({
+      where: { id: bookId },
       data: { available: false },
     });
-    
-    if (book.count > 0) {
-      const updatedBook = await prisma.books.findUnique({ where: { id: bookId } });
-      res.status(200).json({ message: 'Livro reservado com sucesso', book: updatedBook });
-    } else {
-      res.status(404).json({ message: 'Livro não encontrado ou já reservado' });
+
+    // Envia o e-mail de confirmação
+    const user = await prisma.users.findUnique({ where: { id: userId } });
+    if (user) {
+      const subject = `Reserva confirmada: ${book?.title}`;
+      const text = `Olá ${user.name},\n\nSua reserva para o livro "${book?.title}" foi confirmada.\n\nObrigado!`;
+      await sendEmail(user.email, subject, text); // Enviando o e-mail
     }
+
+    res.status(200).json({ message: 'Livro reservado com sucesso', reservation });
   } catch (err) {
     console.error('Error reserving book:', err);
     res.status(500).json({ message: 'Erro ao reservar livro', error: err });
@@ -71,6 +95,43 @@ app.post('/books/reserve/:id', async (req, res) => {
 });
 
 
+app.get('/users/:id/reservations', async (req, res) => {
+  const userId = parseInt(req.params.id);
+  try {
+    const reservations = await prisma.reservation.findMany({
+      where: { userId },
+      include: { book: true },
+    });
+    res.status(200).json(reservations);
+  } catch (err) {
+    console.error('Error fetching reservations:', err);
+    res.status(500).json({ message: 'Server error', error: err });
+  }
+});
+
+app.delete('/reservations/:id', async (req: Request, res: Response) => {
+  const reservationId = parseInt(req.params.id);
+  
+  try {
+    const reservation = await prisma.reservation.findUnique({
+      where: { id: reservationId }
+    });
+
+    await prisma.reservation.delete({
+      where: { id: reservationId }
+    });
+
+    await prisma.books.update({
+      where: { id: reservation?.bookId },
+      data: { available: true }
+    });
+
+    res.status(200).json({ message: 'Reservation canceled successfully' });
+  } catch (err) {
+    console.error('Error canceling reservation:', err);
+    res.status(500).json({ message: 'Server error', error: err });
+  }
+});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

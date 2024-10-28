@@ -7,6 +7,7 @@ import light from './styles/themes/light';
 import dark from './styles/themes/dark';
 import GlobalStyle from './styles/global.ts';
 import usePersistedState from './utils/usePersistedState.ts';
+import React from 'react';
 
 export function App() {
   const [theme, setTheme] = usePersistedState('theme', light);

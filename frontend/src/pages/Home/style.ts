@@ -14,17 +14,19 @@ export const Section = styled.section`
 export const Books = styled.div<BooksProps>`
   text-align: left;
   width: 80%;
-  padding: 10px;
+  padding: 20px;
   border-radius: 5px;
   margin: 5px 0;
 
   background: ${(props) => (props.isEven ? props.theme.colors.even : props.theme.colors.odd)};
 
-  button{
+  button {
     padding: 5px 10px;
     background-color: white;
     cursor: pointer;
     border: none;
+    background-color: green;
+    color: #f5f5f5;
   }
 `;
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
+import { CancelButton, ReservationItem, ReservationList, Section, Title } from './style';
 
 interface Book {
   id: number;
@@ -57,28 +58,28 @@ export function Profile() {
   };
 
   return (
-    <section>
-      <h1 className="text-center text-2xl">Seu Perfil</h1>
+    <Section>
+      <Title className="text-center text-2xl">Seu Perfil</Title>
       {reservations.length > 0 ? (
-        <ul>
+        <ReservationList>
           {reservations.map((reservation) => (
-            <li key={reservation.id} className="border p-4 mb-2">
+            <ReservationItem key={reservation.id} className="border p-4 mb-2">
               <h2>{reservation.book.title}</h2>
               <p>Autor: {reservation.book.author}</p>
               <p>Categoria: {reservation.book.category}</p>
               <p>Status: Reservado</p>
-              <button
+              <CancelButton
                 onClick={() => cancelReservation(reservation.id)}
                 className="mt-2 bg-red-500 text-white py-1 px-3 rounded"
               >
                 Cancelar Reserva
-              </button>
-            </li>
+              </CancelButton>
+            </ReservationItem>
           ))}
-        </ul>
+        </ReservationList>
       ) : (
         <p>Você ainda não reservou nenhum livro.</p>
       )}
-    </section>
+    </Section>
   );
 }

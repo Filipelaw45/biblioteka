@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
+import { Books, Section, Search } from './style';
 
 type SearchType = 'title' | 'author' | 'category' | 'isbn';
 
@@ -69,29 +70,28 @@ export function Home() {
   };
 
   return (
-    <section>
-      <h1 className="text-center text-2xl">Biblioteka</h1>
-      <div className="flex">
-        <input className="border p-3" type="text" onChange={handleSearch} placeholder="Insira o nome do livro" />
+    <Section>
+      <Search>
+        <input type="text" onChange={handleSearch} placeholder={`Digite para buscar`} />
         <select name="typeSearch" onChange={handleTypeSearch}>
           <option value="title">Título</option>
           <option value="author">Autor</option>
           <option value="category">Categoria</option>
           <option value="isbn">ISBN</option>
         </select>
-      </div>
+      </Search>
 
-      {books.map((book) => (
-        <div key={book.id}>
+      {books.map((book, index) => (
+        <Books key={book.id} isEven={index % 2 === 0}>
           <div>
-            <p>{book.title}</p>
-            <p>{book.author}</p>
-            <p>{book.category}</p>
+            <p>Título: {book.title}</p>
+            <p>Autor: {book.author}</p>
+            <p>Categoria: {book.category}</p>
             <p>{book.available ? 'Disponível' : 'Já Reservado'}</p>
           </div>
           {book.available && <button onClick={() => reserveBook(book.id)}>Reservar</button>}
-        </div>
+        </Books>
       ))}
-    </section>
+    </Section>
   );
 }

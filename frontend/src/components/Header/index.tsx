@@ -1,10 +1,10 @@
 import React, { useContext } from 'react';
 import Switch from 'react-switch';
 import { ThemeContext } from 'styled-components';
-import { Container } from './styles';
+import { Button, Container, Logo, Profile } from './styles';
 import { shade } from 'polished';
-import { useAuth } from '../../hooks/useAuth'; // Hook para o AuthContext
-import { Link } from 'react-router-dom'; // Importando Link
+import { useAuth } from '../../hooks/useAuth';
+import { Link } from 'react-router-dom';
 
 interface Props {
   toggleTheme(): void;
@@ -16,17 +16,11 @@ const Header: React.FC<Props> = ({ toggleTheme }) => {
 
   return (
     <Container>
-      <Link to="/">
-        <p style={{ fontWeight: 'bold' }}>BIBLIOTEKA</p>{' '}
-      </Link>
-
-      <div>{isAuthenticated ? `Bem-vindo, ${name}!` : 'Usuário não logado.'}</div>
-      {isAuthenticated && (
-        <Link to="/profile">
-          <button style={{ marginRight: '10px' }}>Perfil</button>
+      <div>
+        <Link to="/" style={{textDecoration: 'none'}}>
+          <Logo style={{ fontWeight: 'bold' }}>BIBLIOTEKA</Logo>
         </Link>
-      )}
-      <button onClick={logout}>SAIR</button>
+      </div>
 
       <Switch
         onChange={toggleTheme}
@@ -39,6 +33,21 @@ const Header: React.FC<Props> = ({ toggleTheme }) => {
         offColor={shade(0.3, colors.primary)}
         onColor={colors.secondary}
       ></Switch>
+
+      <div>
+        {isAuthenticated && (
+          <Profile>
+            <div>Bem-vindo, {name}!</div>
+            <Link to="/">
+              <Button>Inicio</Button>
+            </Link>
+            <Link to="/profile">
+              <Button>Perfil</Button>
+            </Link>
+            <Button onClick={logout}>Sair</Button>
+          </Profile>
+        )}
+      </div>
     </Container>
   );
 };

@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
-// import { users } from '../../helpers/users';
 import { useAuth } from '../../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import { Section, Title, Form, Label, Input, Button } from './style';
 
 export function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-
-  // const [error, setError] = useState('');
 
   const { isAuthenticated, login } = useAuth();
   const navigate = useNavigate();
@@ -22,13 +20,12 @@ export function Login() {
   };
 
   return (
-    <section>
-      <h1>Biblioteka</h1>
-      <h2>Login</h2>
+    <Section>
+      <Title>Login</Title>
 
-      <form className="flex flex-col bg-blue-300" onSubmit={handleLogin}>
-        <label htmlFor="username">Usuário:</label>
-        <input
+      <Form className="flex flex-col bg-blue-300" onSubmit={handleLogin}>
+        <Label htmlFor="username">Usuário:</Label>
+        <Input
           id="username"
           name="username"
           autoComplete="off"
@@ -36,8 +33,8 @@ export function Login() {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
-        <label htmlFor="password">Senha:</label>
-        <input
+        <Label htmlFor="password">Senha:</Label>
+        <Input
           id="password"
           name="password"
           autoComplete="off"
@@ -45,9 +42,8 @@ export function Login() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
-        <button type="submit">Entrar</button>
-        {/* {error && <p style={{ color: 'red' }}>{error}</p>} */}
-      </form>
-    </section>
+        <Button type="submit">Entrar</Button>
+      </Form>
+    </Section>
   );
 }

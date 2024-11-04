@@ -2,10 +2,10 @@
   "name": "server",
   "version": "1.0.0",
   "description": "",
-  "main": "index.ts",
+  "main": "server.ts",
   "scripts": {
     "build": "tsc",
-    "dev": "nodemon server.ts",
+    "dev": "nodemon ./src/server.ts",
     "seed": "ts-node --transpile-only prisma/seed.ts"
   },
   "keywords": [],

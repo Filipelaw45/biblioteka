@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import * as dotenv from 'dotenv';
-import prisma from './prisma/prismaClient';
+import prisma from './prismaClient';
 import { sendEmail } from './mailer'
 
 dotenv.config();

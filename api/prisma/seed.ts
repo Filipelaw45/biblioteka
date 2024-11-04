@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
@@ -221,30 +222,24 @@ const booksData = [
 ];
 
 const usersData = [
-  { username: 'user1', password_hash: 'senha123', name: 'Alice Johnson', email: 'mescaulee3@gmail.com' },
-  { username: 'user2', password_hash: 'senha123', name: 'Bob Smith', email: 'filipe.law@gmail.com' },
-  { username: 'user3', password_hash: 'senha123', name: 'Charlie Brown', email: 'mescaulee5@gmail.com' },
-  { username: 'user4', password_hash: 'senha123', name: 'Diana Prince', email: 'mescaulee6@gmail.com' },
-  { username: 'user5', password_hash: 'senha123', name: 'Edward Elric', email: 'mescaulee7@gmail.com' },
-  { username: 'user6', password_hash: 'senha123', name: 'Fiona Apple', email: 'mescaulee8@gmail.com' },
-  { username: 'user7', password_hash: 'senha123', name: 'George Lucas', email: 'mescaulee9@gmail.com' },
-  { username: 'user8', password_hash: 'senha123', name: 'Hannah Arendt', email: 'mescaulee0@gmail.com' },
-  { username: 'user9', password_hash: 'senha123', name: 'Isaac Newton', email: 'mescaulee1@gmail.com' },
-  { username: 'user10', password_hash: 'senha123', name: 'Jack Sparrow', email: 'mescaulee2@gmail.com' },
+  { username: 'user1', password: 'senha123', name: 'Makawlly', email: 'mescaulee3@gmail.com' },
+  { username: 'user2', password: 'senha123', name: 'Filipe', email: 'filipe.law@gmail.com' },
+  { username: 'user3', password: 'senha123', name: 'Filipe 2', email: 'filipe.law45@gmail.com' },
 ];
 
 async function main() {
   for (const user of usersData) {
+    const hashedPassword = await bcrypt.hash(user.password, 8);
     await prisma.users.upsert({
       where: { email: user.email },
       update: {
         username: user.username,
-        password_hash: user.password_hash,
+        password: hashedPassword,
         name: user.name,
       },
       create: {
         username: user.username,
-        password_hash: user.password_hash,
+        password: hashedPassword,
         name: user.name,
         email: user.email,
       },
@@ -272,6 +267,9 @@ async function main() {
 }
 
 main()
+  .then(() => {
+    console.log('Seed executada corretamente');
+  })
   .catch((e) => {
     console.error('Erro ao popular o banco de dados:', e);
   })

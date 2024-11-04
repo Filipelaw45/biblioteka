@@ -8,29 +8,34 @@ datasource db {
 }
 
 model Users {
-  id           Int          @id @default(autoincrement())
-  username     String       @unique
+  id           String        @id @default(cuid())
+  username     String        @unique
   name         String
-  password_hash String
-  email         String       @unique
-  reservations  Reservation[] @relation("UserReservations") 
+  password     String
+  email        String        @unique
+  createdAt    DateTime      @default(now())
+  reservations Reservation[] @relation("UserReservations")
 }
 
 model Books {
-  id       Int          @id @default(autoincrement())
-  title    String
-  author   String
-  available Boolean
-  isbn     String       @unique
-  category  String?
-  reservations Reservation[] @relation("BookReservations") 
+  id           String        @id @default(cuid())
+  title        String
+  author       String
+  available    Boolean
+  isbn         String        @unique
+  category     String?
+  createdAt    DateTime      @default(now())
+  reservations Reservation[] @relation("BookReservations")
 }
 
 model Reservation {
-  id        Int    @id @default(autoincrement())
-  userId    Int
-  bookId    Int
-  createdAt DateTime @default(now())
-  user      Users @relation("UserReservations", fields: [userId], references: [id]) 
-  book      Books @relation("BookReservations", fields: [bookId], references: [id]) 
+  id               String   @id @default(cuid())
+  userId           String
+  bookId           String
+  queueReservation String[]
+  createdAt        DateTime @default(now())
+  user             Users    @relation("UserReservations", fields: [userId], references: [id])
+  book             Books    @relation("BookReservations", fields: [bookId], references: [id])
+
+  @@unique([userId, bookId])
 }

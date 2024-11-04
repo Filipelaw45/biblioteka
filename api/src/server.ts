@@ -1,8 +1,9 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
 import cors from 'cors';
 import * as dotenv from 'dotenv';
-import prisma from './prismaClient';
-import { sendEmail } from './mailer'
+import prisma from './config/prismaClient';
+import bcrypt from 'bcrypt';
+import { notifyReserve, notifyUserAvailableForPickup } from './utils/sendEmail';
 
 dotenv.config();
 
@@ -14,9 +15,10 @@ app.post('/login', async (req, res) => {
   const { username, password } = req.body;
   try {
     const user = await prisma.users.findFirst({
-      where: { username, password_hash: password },
+      where: { username },
     });
-    if (user) {
+
+    if (user && (await bcrypt.compare(password, user.password))) {
       res.status(200).json({
         token: 'token-ficticio',
         user: {
@@ -24,7 +26,6 @@ app.post('/login', async (req, res) => {
           id: user.id,
         },
       });
-      console.log(user.id);
     } else {
       res.status(401).json({ message: 'Invalid credentials' });
     }
@@ -55,36 +56,78 @@ app.get('/books', async (req, res) => {
   }
 });
 
-app.post('/books/reserve/:id', async (req: Request, res: Response) => {
-  const bookId = parseInt(req.params.id);
-  const { userId } = req.body; // Receber o userId do corpo da requisição
+app.post('/books/reserve/:id', async (req: any, res: any) => {
+  const bookId = req.params.id;
+  const { userId } = req.body;
 
   try {
-    // Verifica se o livro existe e está disponível
     const book = await prisma.books.findUnique({
       where: { id: bookId },
     });
 
-    // Cria a reserva
-    const reservation = await prisma.reservation.create({
-      data: {
-        userId,
-        bookId,
-      },
+    if (!book) {
+      return res.status(404).json({ message: 'Livro não encontrado' });
+    }
+
+    const activeReservation = await prisma.reservation.findFirst({
+      where: { bookId, userId },
     });
 
-    // Atualiza o status do livro
-    await prisma.books.update({
-      where: { id: bookId },
-      data: { available: false },
-    });
+    console.log(activeReservation);
 
-    // Envia o e-mail de confirmação
-    const user = await prisma.users.findUnique({ where: { id: userId } });
-    if (user) {
-      const subject = `Reserva confirmada: ${book?.title}`;
-      const text = `Olá ${user.name},\n\nSua reserva para o livro "${book?.title}" foi confirmada.\n\nObrigado!`;
-      await sendEmail(user.email, subject, text); // Enviando o e-mail
+    if (activeReservation) {
+      return res.status(400).json({ message: 'Você já reservou este livro' });
+    }
+
+    let reservation;
+    if (book.available) {
+      reservation = await prisma.reservation.create({
+        data: {
+          userId,
+          bookId,
+        },
+      });
+
+      await prisma.books.update({
+        where: { id: bookId },
+        data: { available: false },
+      });
+
+      const user = await prisma.users.findUnique({ where: { id: userId } });
+      if (user) await notifyReserve(user.email, book.title, user.name);
+    } else {
+      const existingReservation = await prisma.reservation.findFirst({
+        where: { bookId },
+      });
+
+      if (!existingReservation) {
+        reservation = await prisma.reservation.create({
+          data: {
+            userId,
+            bookId,
+            queueReservation: [],
+          },
+        });
+      } else {
+        if (existingReservation.queueReservation.includes(userId)) {
+          return res.status(400).json({ message: 'Você já está na fila para este livro' });
+        }
+
+        reservation = await prisma.reservation.update({
+          where: { id: existingReservation.id },
+          data: {
+            queueReservation: {
+              push: userId,
+            },
+          },
+        });
+      }
+      const position = reservation.queueReservation.indexOf(userId) + 1;
+
+      res
+        .status(200)
+        .json({ message: `Você foi adicionado à fila para este livro. Sua posição atual é ${position}`, reservation });
+      return;
     }
 
     res.status(200).json({ message: 'Livro reservado com sucesso', reservation });
@@ -94,9 +137,56 @@ app.post('/books/reserve/:id', async (req: Request, res: Response) => {
   }
 });
 
+app.post('/books/refund/:id', async (req: any, res: any) => {
+  const bookId = req.params.id;
 
-app.get('/users/:id/reservations', async (req, res) => {
-  const userId = parseInt(req.params.id);
+  try {
+    const book = await prisma.books.findUnique({
+      where: { id: bookId },
+      include: { reservations: true },
+    });
+
+    if (!book) {
+      return res.status(404).json({ message: 'Book not found' });
+    }
+
+    const reservation = await prisma.reservation.findFirst({
+      where: { bookId },
+    });
+
+    if (!reservation) {
+      return res.status(404).json({ message: 'Reservation not found for this user' });
+    }
+
+    if (reservation.queueReservation.length > 0) {
+      const nextUserId = reservation.queueReservation[0];
+
+      await prisma.reservation.update({
+        where: { id: reservation.id },
+        data: {
+          userId: nextUserId,
+          bookId: bookId,
+          queueReservation: reservation.queueReservation.slice(1),
+        },
+      });
+
+      const user = await prisma.users.findUnique({ where: { id: nextUserId } });
+      if (user) await notifyUserAvailableForPickup(user.email, book.title, user.name);
+    } else {
+      await prisma.reservation.delete({
+        where: { id: reservation.id },
+      });
+    }
+
+    res.status(200).json({ message: 'Refund processed successfully' });
+  } catch (err) {
+    console.error('Error refund book:', err);
+    res.status(500).json({ message: 'Erro ao reservar livro', error: err });
+  }
+});
+
+app.get('/users/:userid/reservations', async (req, res) => {
+  const userId = req.params.userid;
   try {
     const reservations = await prisma.reservation.findMany({
       where: { userId },
@@ -109,21 +199,21 @@ app.get('/users/:id/reservations', async (req, res) => {
   }
 });
 
-app.delete('/reservations/:id', async (req: Request, res: Response) => {
-  const reservationId = parseInt(req.params.id);
-  
+app.delete('/reservations/:id', async (req, res) => {
+  const reservationId = req.params.id;
+
   try {
     const reservation = await prisma.reservation.findUnique({
-      where: { id: reservationId }
+      where: { id: reservationId },
     });
 
     await prisma.reservation.delete({
-      where: { id: reservationId }
+      where: { id: reservationId },
     });
 
     await prisma.books.update({
       where: { id: reservation?.bookId },
-      data: { available: true }
+      data: { available: true },
     });
 
     res.status(200).json({ message: 'Reservation canceled successfully' });
@@ -135,5 +225,5 @@ app.delete('/reservations/:id', async (req: Request, res: Response) => {
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on port http://localhost:${PORT}`);
 });

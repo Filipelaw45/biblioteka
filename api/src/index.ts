@@ -27,10 +27,10 @@ app.post('/login', async (req, res) => {
         },
       });
     } else {
-      res.status(401).json({ message: 'Invalid credentials' });
+      res.status(401).json({ message: 'Usuário ou senha inválidos' });
     }
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err });
+    res.status(500).json({ message: 'Internal server Error', error: err });
   }
 });
 
@@ -52,7 +52,7 @@ app.get('/books', async (req, res) => {
     res.status(200).json(books);
   } catch (err) {
     console.error('Error fetching books:', err);
-    res.status(500).json({ message: 'Server error', error: err });
+    res.status(500).json({ message: 'Erro ao buscar Livros', error: err });
   }
 });
 
@@ -72,8 +72,6 @@ app.post('/books/reserve/:id', async (req: any, res: any) => {
     const activeReservation = await prisma.reservation.findFirst({
       where: { bookId, userId },
     });
-
-    console.log(activeReservation);
 
     if (activeReservation) {
       return res.status(400).json({ message: 'Você já reservou este livro' });
@@ -147,7 +145,7 @@ app.post('/books/refund/:id', async (req: any, res: any) => {
     });
 
     if (!book) {
-      return res.status(404).json({ message: 'Book not found' });
+      return res.status(404).json({ message: 'Livro não encontrado' });
     }
 
     const reservation = await prisma.reservation.findFirst({
@@ -155,7 +153,7 @@ app.post('/books/refund/:id', async (req: any, res: any) => {
     });
 
     if (!reservation) {
-      return res.status(404).json({ message: 'Reservation not found for this user' });
+      return res.status(404).json({ message: 'Reserva não encontrada para este usuário' });
     }
 
     if (reservation.queueReservation.length > 0) {
@@ -178,7 +176,7 @@ app.post('/books/refund/:id', async (req: any, res: any) => {
       });
     }
 
-    res.status(200).json({ message: 'Refund processed successfully' });
+    res.status(200).json({ message: 'Devolução processada com sucesso!' });
   } catch (err) {
     console.error('Error refund book:', err);
     res.status(500).json({ message: 'Erro ao reservar livro', error: err });
@@ -195,7 +193,7 @@ app.get('/users/:userid/reservations', async (req, res) => {
     res.status(200).json(reservations);
   } catch (err) {
     console.error('Error fetching reservations:', err);
-    res.status(500).json({ message: 'Server error', error: err });
+    res.status(500).json({ message: 'Erro ao buscar reservas do usuário', error: err });
   }
 });
 
@@ -216,10 +214,10 @@ app.delete('/reservations/:id', async (req, res) => {
       data: { available: true },
     });
 
-    res.status(200).json({ message: 'Reservation canceled successfully' });
+    res.status(200).json({ message: 'Reserva cancelada com sucesso' });
   } catch (err) {
     console.error('Error canceling reservation:', err);
-    res.status(500).json({ message: 'Server error', error: err });
+    res.status(500).json({ message: 'Ocorreu um erro ao cancelar reserva', error: err });
   }
 });
 

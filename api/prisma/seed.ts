@@ -37,13 +37,6 @@ const booksData = [
   },
   { title: 'A Metamorfose', author: 'Franz Kafka', available: true, isbn: '9788573020990', category: 'Ficção' },
   {
-    title: 'O Pequeno Príncipe',
-    author: 'Antoine de Saint-Exupéry',
-    available: true,
-    isbn: '9788535932891',
-    category: 'Infantil',
-  },
-  {
     title: 'O Morro dos Ventos Uivantes',
     author: 'Emily Brontë',
     available: true,

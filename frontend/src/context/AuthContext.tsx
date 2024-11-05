@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, ReactNode } from 'react';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -11,16 +11,12 @@ interface AuthContextType {
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(!!localStorage.getItem('token'));
-  const [name, setName] = useState<string | null>(null);
-  const [userId, setUserId] = useState<number | null>(null);
+  const storedData = localStorage.getItem('userData');
+  const { name, userId } = storedData ? JSON.parse(storedData) : { name: null, userId: null };
 
-  useEffect(() => {
-    const storedName = localStorage.getItem('name');
-    const storedUserId = localStorage.getItem('userId');
-    if (storedName) setName(storedName);
-    if (storedUserId) setUserId(Number(storedUserId));
-  }, []);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(!!localStorage.getItem('token'));
+  const [userName, setUserName] = useState<string | null>(name);
+  const [userIdState, setUserIdState] = useState<number | null>(userId);
 
   const login = async (username: string, password: string) => {
     try {
@@ -31,15 +27,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       });
 
       if (response.ok) {
-        const { token, user } = await response.json(); // user agora contém { name, id }
+        const { token, user } = await response.json();
         console.log('Response from server:', { token, user });
 
         localStorage.setItem('token', token);
-        localStorage.setItem('name', user.name);
-        localStorage.setItem('userId', user.id); // Armazena o userId como string
+        localStorage.setItem('userData', JSON.stringify({ name: user.name, userId: user.id }));
 
-        setName(user.name);
-        setUserId(user.id); // Atualiza o userId no estado
+        setUserName(user.name);
+        setUserIdState(user.id);
         setIsAuthenticated(true);
       } else {
         alert('Invalid credentials');
@@ -51,14 +46,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = () => {
     localStorage.removeItem('token');
-    localStorage.removeItem('name'); // Limpar o nome do localStorage
-    localStorage.removeItem('userId');
+    localStorage.removeItem('userData');
     setIsAuthenticated(false);
-    setName(null); // Limpar o nome ao sair
-    setUserId(null);
+    setUserName(null);
+    setUserIdState(null);
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout, name, userId }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ isAuthenticated, login, logout, name: userName, userId: userIdState }}>
+      {children}
+    </AuthContext.Provider>
   );
 };

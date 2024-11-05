@@ -12,11 +12,11 @@ interface Book {
 interface Reservation {
   id: number;
   book: Book;
+  queueReservation: string[];
 }
 
 export function Profile() {
   const authContext = useContext(AuthContext);
-
   const userId = authContext?.userId;
   const [reservations, setReservations] = useState<Reservation[]>([]);
 
@@ -40,20 +40,23 @@ export function Profile() {
     fetchReservations();
   }, [userId]);
 
-  const cancelReservation = async (reservationId: number) => {
+  const refundBook = async (bookId: number) => {
     try {
-      const response = await fetch(`http://localhost:5000/reservations/${reservationId}`, {
-        method: 'DELETE',
+      const response = await fetch(`http://localhost:5000/books/refund/${bookId}`, {
+        method: 'POST',
       });
 
       if (response.ok) {
-        setReservations(reservations.filter((res) => res.id !== reservationId));
-        console.log('Reservation canceled successfully');
+        const updatedReservations = reservations.filter((res) => res.book.id !== bookId);
+        setReservations(updatedReservations);
+        console.log('Book returned successfully');
       } else {
-        console.error('Failed to cancel reservation');
+        const result = await response.json();
+        alert(result.message);
+        console.error('Failed to refund book');
       }
     } catch (error) {
-      console.error('Error canceling reservation:', error);
+      console.error('Error refunding book:', error);
     }
   };
 
@@ -67,12 +70,13 @@ export function Profile() {
               <h2>{reservation.book.title}</h2>
               <p>Autor: {reservation.book.author}</p>
               <p>Categoria: {reservation.book.category}</p>
+              <p>Na fila: {reservation.queueReservation.length}</p>
               <p>Status: Reservado</p>
               <CancelButton
-                onClick={() => cancelReservation(reservation.id)}
+                onClick={() => refundBook(reservation.book.id)}
                 className="mt-2 bg-red-500 text-white py-1 px-3 rounded"
               >
-                Cancelar Reserva
+                Devolver Livro
               </CancelButton>
             </ReservationItem>
           ))}

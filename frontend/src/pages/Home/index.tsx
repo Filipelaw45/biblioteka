@@ -55,14 +55,21 @@ export function Home() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ userId: userId }), // Substitua `1` pelo ID real do usuário
+        body: JSON.stringify({ userId: userId }),
       });
 
+      const result = await response.json();
+
       if (response.ok) {
-        const updatedBooks = books.map((book) => (book.id === bookId ? { ...book, available: false } : book));
-        setBooks(updatedBooks);
+        if (result.message.includes('fila')) {
+          alert(result.message);
+        } else {
+          const updatedBooks = books.map((book) => (book.id === bookId ? { ...book, available: false } : book));
+          setBooks(updatedBooks);
+          alert(result.message);
+        }
       } else {
-        console.error('Failed to reserve book');
+        alert(result.message);
       }
     } catch (error) {
       console.error('Error reserving book:', error);
@@ -89,7 +96,7 @@ export function Home() {
             <p>Categoria: {book.category}</p>
             <p>{book.available ? 'Disponível' : 'Já Reservado'}</p>
           </div>
-          {book.available && <button onClick={() => reserveBook(book.id)}>Reservar</button>}
+          <button onClick={() => reserveBook(book.id)}>Reservar</button>
         </Books>
       ))}
     </Section>

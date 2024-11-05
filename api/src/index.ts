@@ -174,6 +174,12 @@ app.post('/books/refund/:id', async (req: any, res: any) => {
       await prisma.reservation.delete({
         where: { id: reservation.id },
       });
+      await prisma.books.update({
+        where: {id: reservation.bookId}, 
+        data: {
+          available: true
+        }
+      })
     }
 
     res.status(200).json({ message: 'Devolução processada com sucesso!' });

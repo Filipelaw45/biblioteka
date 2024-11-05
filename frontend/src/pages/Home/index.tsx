@@ -11,15 +11,20 @@ interface Book {
   isbn: string;
   category: string;
   available: boolean;
-  created_at: string;
+}
+
+interface Reservation {
+  userId: number;
+  bookId: number;
+  queueReservation: string[];
 }
 
 export function Home() {
   const [books, setBooks] = useState<Book[]>([]);
+  const [reservations, setReservations] = useState<Reservation[]>([]);
   const [search, setSearch] = useState<SearchType>('title');
   const [query, setQuery] = useState('');
   const authContext = useContext(AuthContext);
-
   const userId = authContext?.userId;
 
   useEffect(() => {
@@ -33,8 +38,21 @@ export function Home() {
       }
     };
 
+    const fetchReservations = async () => {
+      if (userId) {
+        try {
+          const response = await fetch(`http://localhost:5000/users/${userId}/reservations`);
+          const data = await response.json();
+          setReservations(data);
+        } catch (error) {
+          console.error('Error fetching reservations:', error);
+        }
+      }
+    };
+
     fetchBooks();
-  }, [query, search]);
+    fetchReservations();
+  }, [query, search, userId]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
@@ -55,19 +73,16 @@ export function Home() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ userId: userId }),
+        body: JSON.stringify({ userId }),
       });
 
       const result = await response.json();
 
       if (response.ok) {
-        if (result.message.includes('fila')) {
-          alert(result.message);
-        } else {
-          const updatedBooks = books.map((book) => (book.id === bookId ? { ...book, available: false } : book));
-          setBooks(updatedBooks);
-          alert(result.message);
-        }
+        alert(result.message);
+        setBooks(prevBooks => 
+          prevBooks.map(book => (book.id === bookId ? { ...book, available: false } : book))
+        );
       } else {
         alert(result.message);
       }
@@ -88,17 +103,26 @@ export function Home() {
         </select>
       </Search>
 
-      {books.map((book, index) => (
-        <Books key={book.id} isEven={index % 2 === 0}>
-          <div>
-            <p>Título: {book.title}</p>
-            <p>Autor: {book.author}</p>
-            <p>Categoria: {book.category}</p>
-            <p>{book.available ? 'Disponível' : 'Já Reservado'}</p>
-          </div>
-          <button onClick={() => reserveBook(book.id)}>Reservar</button>
-        </Books>
-      ))}
+      {books.map((book, index) => {
+        const isReservedByUser = reservations.some(reservation => reservation.bookId === book.id);
+
+        return (
+          <Books key={book.id} isEven={index % 2 === 0}>
+            <div>
+              <p>Título: {book.title}</p>
+              <p>Autor: {book.author}</p>
+              <p>Categoria: {book.category}</p>
+              <p>{book.available ? 'Disponível' : 'Já Reservado'}</p>
+            </div>
+            <button 
+              onClick={() => reserveBook(book.id)} 
+              disabled={isReservedByUser}
+            >
+              {book.available ? 'Reservar' : isReservedByUser ? 'Você já reservou este livro' : 'Gostaria de entrar na fila? Livro ainda não disponível.'}
+            </button>
+          </Books>
+        );
+      })}
     </Section>
   );
 }

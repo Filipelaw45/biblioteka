@@ -22,11 +22,15 @@ export const Books = styled.div<BooksProps>`
 
   button {
     padding: 5px 10px;
-    background-color: white;
     cursor: pointer;
     border: none;
     background-color: green;
     color: #f5f5f5;
+
+    &:disabled {
+      background-color: gray;
+      cursor: default;
+    }
   }
 `;
 

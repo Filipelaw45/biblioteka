@@ -1,11 +1,11 @@
 {
-  "name": "server",
+  "name": "biblioteka-api",
   "version": "1.0.0",
   "description": "",
-  "main": "server.ts",
+  "main": "index.ts",
   "scripts": {
     "build": "tsc",
-    "dev": "nodemon ./src/server.ts",
+    "dev": "nodemon ./src/index.ts",
     "seed": "ts-node --transpile-only prisma/seed.ts"
   },
   "keywords": [],

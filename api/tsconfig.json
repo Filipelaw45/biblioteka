@@ -9,6 +9,6 @@
       "skipLibCheck": true,
       "types": ["node"]
     },
-    "include": ["*.ts", "src/server.ts"],
+    "include": ["*.ts", "src/index.ts"],
     "exclude": ["node_modules"]
   }

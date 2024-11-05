@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import * as dotenv from 'dotenv';
+import dotenv from 'dotenv';
 import prisma from './config/prismaClient';
 import bcrypt from 'bcrypt';
 import { notifyReserve, notifyUserAvailableForPickup } from './utils/sendEmail';

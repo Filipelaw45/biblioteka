@@ -6,6 +6,7 @@
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
+    "types": ["@types/jest", "@testing-library/jest-dom"],
 
     /* Bundler mode */
     "moduleResolution": "node",
@@ -21,7 +22,7 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["frontend/src"],
+  "include": ["/src", "src/**/*.spec.tsx"],
   "files": [
     "src/styles/styled.d.ts"
   ],

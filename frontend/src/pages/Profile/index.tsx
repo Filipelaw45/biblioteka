@@ -19,7 +19,7 @@ export function Profile() {
   const authContext = useContext(AuthContext);
   const userId = authContext?.userId;
   const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [loadingBookId, setLoadingBookId] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(false); // Estado de loading global
 
   useEffect(() => {
     const fetchReservations = async () => {
@@ -42,7 +42,7 @@ export function Profile() {
   }, [userId]);
 
   const refundBook = async (bookId: number) => {
-    setLoadingBookId(bookId);
+    setIsLoading(true);
     try {
       const response = await fetch(`http://localhost:5000/books/refund/${bookId}`, {
         method: 'POST',
@@ -60,7 +60,7 @@ export function Profile() {
     } catch (error) {
       console.error('Error refunding book:', error);
     } finally {
-      setLoadingBookId(null);
+      setIsLoading(false); 
     }
   };
 
@@ -78,9 +78,9 @@ export function Profile() {
               <p>Status: Reservado</p>
               <CancelButton
                 onClick={() => refundBook(reservation.book.id)}
-                disabled={loadingBookId === reservation.book.id} 
+                disabled={isLoading}
               >
-                {loadingBookId === reservation.book.id ? 'Devolvendo...' : 'Devolver Livro'}
+                {isLoading ? 'Devolvendo...' : 'Devolver Livro'}
               </CancelButton>
             </ReservationItem>
           ))}

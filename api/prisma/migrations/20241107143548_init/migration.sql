@@ -18,7 +18,6 @@ CREATE TABLE "Books" (
     "available" BOOLEAN NOT NULL,
     "isbn" TEXT NOT NULL,
     "category" TEXT,
-    "queueReservation" TEXT[],
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Books_pkey" PRIMARY KEY ("id")
@@ -29,6 +28,7 @@ CREATE TABLE "Reservation" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "bookId" TEXT NOT NULL,
+    "queueReservation" TEXT[],
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Reservation_pkey" PRIMARY KEY ("id")
@@ -42,6 +42,9 @@ CREATE UNIQUE INDEX "Users_email_key" ON "Users"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Books_isbn_key" ON "Books"("isbn");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Reservation_userId_bookId_key" ON "Reservation"("userId", "bookId");
 
 -- AddForeignKey
 ALTER TABLE "Reservation" ADD CONSTRAINT "Reservation_userId_fkey" FOREIGN KEY ("userId") REFERENCES "Users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

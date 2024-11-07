@@ -23,6 +23,8 @@ async function getBooks(req: Request, res: Response) {
     return res.status(200).json(books);
   } catch (err) {
     return res.status(500).json({ message: 'Erro ao buscar Livros', error: err });
+  } finally {
+    await prisma.$disconnect();
   }
 }
 
@@ -51,6 +53,7 @@ async function reserveBooks(req: Request, res: Response) {
         data: {
           userId,
           bookId,
+          queueReservation: [],
         },
       });
 
@@ -61,10 +64,13 @@ async function reserveBooks(req: Request, res: Response) {
 
       const user = await prisma.users.findUnique({ where: { id: userId } });
       if (user) await notifyReserve(user.email, book.title, user.name);
+      return res.status(200).json({ message: 'Livro reservado com sucesso', reservation });
     } else {
       const existingReservation = await prisma.reservation.findFirst({
         where: { bookId },
       });
+
+      console.log(existingReservation);
 
       if (!existingReservation) {
         reservation = await prisma.reservation.create({
@@ -94,10 +100,10 @@ async function reserveBooks(req: Request, res: Response) {
         .status(200)
         .json({ message: `Você foi adicionado à fila para este livro. Sua posição atual é ${position}`, reservation });
     }
-
-    return res.status(200).json({ message: 'Livro reservado com sucesso', reservation });
   } catch (err) {
     return res.status(500).json({ message: 'Erro ao reservar livro', error: err });
+  } finally {
+    await prisma.$disconnect();
   }
 }
 
@@ -137,6 +143,12 @@ async function refundBooks(req: Request, res: Response) {
       const user = await prisma.users.findUnique({ where: { id: nextUserId } });
       if (user) await notifyUserAvailableForPickup(user.email, book.title, user.name);
     } else {
+      await prisma.books.update({
+        where: { id: bookId },
+        data: {
+          available: true,
+        },
+      });
       await prisma.reservation.delete({
         where: { id: reservation.id },
       });
@@ -145,6 +157,8 @@ async function refundBooks(req: Request, res: Response) {
     return res.status(200).json({ message: 'Devolução processada com sucesso!' });
   } catch (err) {
     return res.status(500).json({ message: 'Erro ao reservar livro', error: err });
+  } finally {
+    await prisma.$disconnect();
   }
 }
 

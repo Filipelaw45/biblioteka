@@ -16,7 +16,6 @@ interface Book {
 interface Reservation {
   userId: number;
   bookId: number;
-  queueReservation: string[];
 }
 
 export function Home() {
@@ -27,29 +26,29 @@ export function Home() {
   const authContext = useContext(AuthContext);
   const userId = authContext?.userId;
 
-  useEffect(() => {
-    const fetchBooks = async () => {
+  const fetchBooks = async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/books?search=${query}&type=${search}`);
+      const data: Book[] = await response.json();
+      setBooks(data);
+    } catch (error) {
+      console.error('Error fetching books:', error);
+    }
+  };
+
+  const fetchReservations = async () => {
+    if (userId) {
       try {
-        const response = await fetch(`http://localhost:5000/books?search=${query}&type=${search}`);
-        const data: Book[] = await response.json();
-        setBooks(data);
+        const response = await fetch(`http://localhost:5000/users/${userId}/reservations`);
+        const data = await response.json();
+        setReservations(Array.isArray(data) ? data : []);
       } catch (error) {
-        console.error('Error fetching books:', error);
+        console.error('Error fetching reservations:', error);
       }
-    };
-
-    const fetchReservations = async () => {
-      if (userId) {
-        try {
-          const response = await fetch(`http://localhost:5000/users/${userId}/reservations`);
-          const data = await response.json();
-          setReservations(data);
-        } catch (error) {
-          console.error('Error fetching reservations:', error);
-        }
-      }
-    };
-
+    }
+  };
+  
+  useEffect(() => {
     fetchBooks();
     fetchReservations();
   }, [query, search, userId]);
@@ -80,15 +79,15 @@ export function Home() {
 
       if (response.ok) {
         alert(result.message);
-        setBooks(prevBooks => 
-          prevBooks.map(book => (book.id === bookId ? { ...book, available: false } : book))
-        );
+        setBooks((prevBooks) => prevBooks.map((book) => (book.id === bookId ? { ...book, available: false } : book)));
       } else {
         alert(result.message);
       }
     } catch (error) {
       console.error('Error reserving book:', error);
     }
+    fetchBooks();
+    fetchReservations();
   };
 
   return (
@@ -104,8 +103,7 @@ export function Home() {
       </Search>
 
       {books.map((book, index) => {
-        const isReservedByUser = reservations.some(reservation => reservation.bookId === book.id);
-
+        const isReservedByUser = reservations.some((reservation) => reservation.bookId === book.id);
         return (
           <Books key={book.id} isEven={index % 2 === 0}>
             <div>
@@ -114,11 +112,12 @@ export function Home() {
               <p>Categoria: {book.category}</p>
               <p>{book.available ? 'Disponível' : 'Já Reservado'}</p>
             </div>
-            <button 
-              onClick={() => reserveBook(book.id)} 
-              disabled={isReservedByUser}
-            >
-              {book.available ? 'Reservar' : isReservedByUser ? 'Você já reservou este livro' : 'Gostaria de entrar na fila? Livro ainda não disponível.'}
+            <button onClick={() => reserveBook(book.id)} disabled={isReservedByUser}>
+              {book.available
+                ? 'Reservar'
+                : isReservedByUser
+                ? 'Você ja reservou esse livro'
+                : 'Entrar na fila de reserva'}
             </button>
           </Books>
         );

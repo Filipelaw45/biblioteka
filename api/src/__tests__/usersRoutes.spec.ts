@@ -46,7 +46,7 @@ describe('GET /users/:userid/reservations', () => {
     },
   ];
 
-  it('deve retornar 200 e uma lista de reservas do usuário', async () => {
+  it('should return 200 and a list of user reservations', async () => {
     prismaMock.users.findUnique.mockResolvedValue(user);
     prismaMock.reservation.findMany.mockResolvedValue(reservations);
 
@@ -62,7 +62,7 @@ describe('GET /users/:userid/reservations', () => {
     expect(reservation).toHaveProperty('bookId');
   });
 
-  it('deve retornar 200 e uma mensagem se o usuário não possui reservas', async () => {
+  it('should return 200 and a message if the user has no reservations', async () => {
     prismaMock.users.findUnique.mockResolvedValue(user);
     prismaMock.reservation.findMany.mockResolvedValue([]);
 
@@ -72,7 +72,7 @@ describe('GET /users/:userid/reservations', () => {
     expect(response.body).toHaveProperty('message', 'Nenhuma reserva encontrada para este usuário');
   });
 
-  it('deve retornar 404 se o usuário não for encontrado', async () => {
+  it('should return 404 if user is not found', async () => {
     prismaMock.users.findUnique.mockResolvedValue(null);
 
     const response = await request(app).get(`/users/${user.id}/reservations`);
@@ -81,7 +81,7 @@ describe('GET /users/:userid/reservations', () => {
     expect(response.body).toHaveProperty('message', 'Usuário não encontrado');
   });
 
-  it('deve retornar 500 em caso de erro interno', async () => {
+  it('should return 500 in case of internal error', async () => {
     prismaMock.users.findUnique.mockRejectedValue(new Error('Erro interno'));
 
     const response = await request(app).get(`/users/${user.id}/reservations`);

@@ -24,6 +24,8 @@ async function getUserReservations(req: Request, res: Response) {
     return res.status(200).json(reservations);
   } catch (err) {
     return res.status(500).json({ message: 'Erro ao buscar reservas do usuário' });
+  } finally {
+    await prisma.$disconnect();
   }
 }
 

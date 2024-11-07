@@ -26,6 +26,8 @@ async function login(req: Request, res: Response): Promise<Response> {
     }
   } catch (err) {
     return res.status(500).json({ message: 'Internal server Error' });
+  } finally {
+    await prisma.$disconnect();
   }
 }
 

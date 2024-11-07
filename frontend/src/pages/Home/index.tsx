@@ -23,7 +23,7 @@ export function Home() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [search, setSearch] = useState<SearchType>('title');
   const [query, setQuery] = useState('');
-  const [loadingBookId, setLoadingBookId] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const authContext = useContext(AuthContext);
   const userId = authContext?.userId;
 
@@ -67,7 +67,8 @@ export function Home() {
       alert('User not logged in');
       return;
     }
-    setLoadingBookId(bookId); // Inicia o loading para o livro específico
+    
+    setIsLoading(true); 
     try {
       const response = await fetch(`http://localhost:5000/books/reserve/${bookId}`, {
         method: 'POST',
@@ -81,16 +82,18 @@ export function Home() {
 
       if (response.ok) {
         alert(result.message);
-        setBooks((prevBooks) => prevBooks.map((book) => (book.id === bookId ? { ...book, available: false } : book)));
+        setBooks((prevBooks) =>
+          prevBooks.map((book) => (book.id === bookId ? { ...book, available: false } : book))
+        );
       } else {
         alert(result.message);
       }
     } catch (error) {
       console.error('Error reserving book:', error);
     } finally {
-      setLoadingBookId(null);
+      setIsLoading(false);
       fetchBooks();
-      fetchReservations(); 
+      fetchReservations();
     }
   };
 
@@ -108,7 +111,7 @@ export function Home() {
 
       {books.map((book, index) => {
         const isReservedByUser = reservations.some((reservation) => reservation.bookId === book.id);
-        const isLoading = loadingBookId === book.id;
+
         return (
           <Books key={book.id} isEven={index % 2 === 0}>
             <div>
@@ -118,11 +121,11 @@ export function Home() {
               <p>{book.available ? 'Disponível' : 'Já Reservado'}</p>
             </div>
             <button onClick={() => reserveBook(book.id)} disabled={isReservedByUser || isLoading}>
-              {isLoading
-                ? 'Carregando...'
-                : book.available
+            {book.available
                 ? 'Reservar'
-                : 'Você já reservou esse livro'}
+                : isReservedByUser
+                ? 'Você ja reservou esse livro'
+                : 'Entrar na fila de reserva'}
             </button>
           </Books>
         );

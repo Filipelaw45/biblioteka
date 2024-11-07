@@ -23,6 +23,7 @@ export function Home() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [search, setSearch] = useState<SearchType>('title');
   const [query, setQuery] = useState('');
+  const [loadingBookId, setLoadingBookId] = useState<number | null>(null);
   const authContext = useContext(AuthContext);
   const userId = authContext?.userId;
 
@@ -47,7 +48,7 @@ export function Home() {
       }
     }
   };
-  
+
   useEffect(() => {
     fetchBooks();
     fetchReservations();
@@ -66,6 +67,7 @@ export function Home() {
       alert('User not logged in');
       return;
     }
+    setLoadingBookId(bookId); // Inicia o loading para o livro específico
     try {
       const response = await fetch(`http://localhost:5000/books/reserve/${bookId}`, {
         method: 'POST',
@@ -85,9 +87,11 @@ export function Home() {
       }
     } catch (error) {
       console.error('Error reserving book:', error);
+    } finally {
+      setLoadingBookId(null);
+      fetchBooks();
+      fetchReservations(); 
     }
-    fetchBooks();
-    fetchReservations();
   };
 
   return (
@@ -104,6 +108,7 @@ export function Home() {
 
       {books.map((book, index) => {
         const isReservedByUser = reservations.some((reservation) => reservation.bookId === book.id);
+        const isLoading = loadingBookId === book.id;
         return (
           <Books key={book.id} isEven={index % 2 === 0}>
             <div>
@@ -112,12 +117,12 @@ export function Home() {
               <p>Categoria: {book.category}</p>
               <p>{book.available ? 'Disponível' : 'Já Reservado'}</p>
             </div>
-            <button onClick={() => reserveBook(book.id)} disabled={isReservedByUser}>
-              {book.available
+            <button onClick={() => reserveBook(book.id)} disabled={isReservedByUser || isLoading}>
+              {isLoading
+                ? 'Carregando...'
+                : book.available
                 ? 'Reservar'
-                : isReservedByUser
-                ? 'Você ja reservou esse livro'
-                : 'Entrar na fila de reserva'}
+                : 'Você já reservou esse livro'}
             </button>
           </Books>
         );

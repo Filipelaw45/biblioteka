@@ -19,6 +19,7 @@ export function Profile() {
   const authContext = useContext(AuthContext);
   const userId = authContext?.userId;
   const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [loadingBookId, setLoadingBookId] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchReservations = async () => {
@@ -41,6 +42,7 @@ export function Profile() {
   }, [userId]);
 
   const refundBook = async (bookId: number) => {
+    setLoadingBookId(bookId);
     try {
       const response = await fetch(`http://localhost:5000/books/refund/${bookId}`, {
         method: 'POST',
@@ -57,6 +59,8 @@ export function Profile() {
       }
     } catch (error) {
       console.error('Error refunding book:', error);
+    } finally {
+      setLoadingBookId(null);
     }
   };
 
@@ -74,9 +78,9 @@ export function Profile() {
               <p>Status: Reservado</p>
               <CancelButton
                 onClick={() => refundBook(reservation.book.id)}
-                className="mt-2 bg-red-500 text-white py-1 px-3 rounded"
+                disabled={loadingBookId === reservation.book.id} 
               >
-                Devolver Livro
+                {loadingBookId === reservation.book.id ? 'Devolvendo...' : 'Devolver Livro'}
               </CancelButton>
             </ReservationItem>
           ))}

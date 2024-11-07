@@ -40,4 +40,8 @@ export const CancelButton = styled.button`
   &:hover {
     background-color: #d32f2f;
   }
+
+  &:disabled {
+    background-color: gray;
+  }
 `;

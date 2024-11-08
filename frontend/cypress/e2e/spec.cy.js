@@ -73,6 +73,6 @@ describe('Home Page Tests', () => {
     cy.wait(2000);
 
     // Verifica se o livro foi reservado (ajuste conforme sua lógica)
-    cy.get('button').contains('Você já reservou esse livro').first(); // Verifica se o botão foi alterado
+    cy.get('button').contains('Você ja reservou esse livro').first(); // Verifica se o botão foi alterado
   });
 });

@@ -69,3 +69,34 @@ describe('Home Page Tests', () => {
     cy.get('button').contains('Você ja reservou esse livro').first();
   });
 });
+
+describe('Login another user', () => {
+
+  it('should reserve a book', () => {
+
+    cy.visit('http://localhost:5173/login');
+
+    cy.get('input[name="username"]').type('user2');
+    cy.get('input[name="password"]').type('senha123');
+    cy.get('button[type="submit"]').click();
+
+    // Verifica se foi redirecionado para a página inicial ou outra página relevante
+    cy.url().should('include', '/');
+
+    cy.wait(1000);
+
+    cy.get('input[type="text"]').type('Moby Dick');
+    cy.wait(1000);
+
+    cy.get('button').contains('Entrar na fila de reserva').first().click();
+    cy.wait(2000);
+
+    cy.on('window:alert', (alertText) => {
+      expect(alertText).to.equal('Você foi adicionado à fila para este livro. Sua posição atual é 1');
+    });
+  });
+});
+
+
+
+
